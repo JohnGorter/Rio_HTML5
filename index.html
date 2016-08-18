@@ -1,0 +1,34 @@
+<html>
+<head>
+</head>
+<body>
+    <div><h1>Rio Olympics</h1></div>
+
+    <div>
+        <h2>Add a new sport</h2>
+        <form>
+            <dl>
+                <dt>Sport</dt>
+                <dd><input type="text" id="sport" name="sport"/></dd>
+            </dl>
+            <input type="button" value="save" onclick="saveSport();" />
+        </form>
+    </div>
+
+    <div>
+        <h2>Sports</h2>
+        <ul id="sportslist">
+            <!-- sports list items -->
+        </ul>
+    </div>
+
+</body>
+<script>
+  function saveSport(){
+      var list = document.querySelector("#sportslist");
+      var name = document.querySelector("#sport").value;
+      list.innerHTML += "<li>" + name + "</li>";
+  }
+</script>
+</html>
+
