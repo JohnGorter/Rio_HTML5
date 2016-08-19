@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html manifest="app.manifest">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css?family=Denk+One" rel="stylesheet">
+    <script src="jquery.js"></script>
+
 </head>
 <style>
     @font-face {
@@ -10,9 +11,9 @@
         src:url('john.ttf');
     }
     :root {
-        --main-color:red;
+        --main-color:black;
     }
-    body { margin:0px; font-family:Denk one, john, tahoma; color:var(--main-color);}
+    body { margin:0px; font-family:Verdana, john, tahoma; color:var(--main-color);}
     header { text-shadow:5px 5px 3px black;display:flex;align-items:center;padding:20px;background:linear-gradient(var(--main-color), white);font-size:32px;color:white}
     img { margin-right:20px;}
     div { padding:20px; }
@@ -20,9 +21,14 @@
     
     input:valid + span  { color:green;font-size:16px;}
     input:invalid + span { color:red;font-size:10px;}
+    .hover {  background-color:silver}
+    .local { color:orange}
+    .server { color:green }
 </style>
 <body>
-    <header><img src="2016_1.png" height="50"/>Rio Olympics</header>
+    <header><img src="2016_1.png" height="50"/>Rio Olympics 3</header>
+
+    <a href="admin.html">Admin settings</a>
 
     <div>
         <h2>Add a new sport</h2>
@@ -90,24 +96,100 @@
         <ul id="sportslist">
             <!-- sports list items -->
         </ul>
-        
+        <input type="button" value="clear list" onclick="clearList()"/>
+        <input type="button" value="export list" onclick="exportSports()"/>
     </div>
 
+    <div id="status"></div>
     <footer>Info Support (c) All Rights Reserved</footer>
 
 </body>
 <script>
-  function saveSport(){
+
+  var amonline = window.navigator.onLine; 
+  window.addEventListener('online', function(){
+      syncData();
+       amonline = true; 
+  });
+  window.addEventListener('offline', function(){
+     amonline = false;
+  });
+
+  var sports = [];
+  if (amonline) {
+      syncData();
+      console.log('getting the list from the server..');
+      $.ajax({url:'/sports', method:'GET', dataType:'JSON', success:function(data){
+        sports = data;
+        window.localStorage['sports'] = JSON.stringify(data);
+        buildList();    
+      }});
+  } else {
+    console.log('getting the list from localstorage..');
+    if (window.localStorage["sports"]){
+        sports = JSON.parse(window.localStorage["sports"]);
+        buildList(); 
+    }
+  }
+
+  function buildList(){
+    var list = document.querySelector("#sportslist");
+    list.innerHTML = "";
+    for (var s in sports){
+        list.innerHTML += "<li class='" + (sports[s].local ? "local" : "server") + "'>" + sports[s].name + "</li>";
+    }
+  }
+ function syncData(){
+     if (window.localStorage['sports']) {
+        var sportslocal = JSON.parse(window.localStorage['sports']);
+        var updated = []; 
+        for (var s in sportslocal){
+            if (sportslocal[s].local) {
+              console.log('sending ' + sportslocal[s].name + ' to the server');
+               var data = {name: sportslocal[s].name};
+               $.ajax({url:'/sports', method:'POST', contentType: "application/json; charset=utf-8", dataType:'JSON', data:JSON.stringify(data), success:function(){ alert('saved');}});
+            }
+            updated.push({name:sportslocal[s].name, local:false});
+        }   
+      //  delete window.localStorage['sports'];
+        sports = updated;
+        window.localStorage['sports'] = JSON.stringify(updated);
+        buildList();
+     }
+ }
+ function clearList() {
+    delete window.localStorage['sports'];
+    sports = [];
+    buildList();  
+ }
+
+ function saveSport(){
       if (document.forms[0].checkValidity()){
         var list = document.querySelector("#sportslist");
         var name = document.querySelector("#sport").value;
         if (list.innerText.indexOf(name) < 0){
-            list.innerHTML += "<li>" + name + "</li>";
-            document.querySelector("#sport").value = '';
-           
+            list.innerHTML += "<li class='" + (amonline?"server":"local") + "'>" + name + "</li>";
+            saveSportToStore(name);
+            document.querySelector("#sport").value = ''; 
         }
       }
+ }
+
+ function saveSportToStore(sportname) {
+     if (amonline) {
+         var data = {name: sportname};
+         sports.push({'name':sportname, local:false});
+         $.ajax({url:'/sports', method:'POST', contentType: "application/json; charset=utf-8", dataType:'JSON', data:JSON.stringify(data), success:function(){ alert('saved');}});
+         window.localStorage["sports"] = JSON.stringify(sports);
+         console.log('saving data to the server...'); 
+     } else {
+         sports.push({'name':sportname, local:true});
+         console.log('saving data to locally...');
+         window.localStorage["sports"] = JSON.stringify(sports);
+          
+     }
   }
+
 
   function setColor(){
       var body = document.querySelector("body");
@@ -115,5 +197,51 @@
       body.style.setProperty('--main-color', color);
   }
 </script>
+
+<script type="text/javascript">
+
+var holder = document.querySelector("body");
+
+holder.ondragover = function () { this.className = 'hover'; return false; };
+holder.ondragend = function () { this.className = ''; return false; };
+holder.ondrop = function (e) {
+  this.className = '';
+ 
+  e.preventDefault();
+
+  var file = e.dataTransfer.files[0],
+
+  reader = new FileReader();
+  reader.onload = function (event) {
+    console.log(event.target.result);
+    sports = JSON.parse(event.target.result);
+    window.localStorage["sports"] = JSON.stringify(sports);
+    buildList(); 
+  };
+
+  reader.readAsText(file);
+
+  return false;
+};
+
+function exportSports(){
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+
+    var json = JSON.stringify(sports),
+    blob = new Blob([json], {type: "octet/stream"}),
+    url = window.URL.createObjectURL(blob);
+ 
+    a.href = url;
+    a.download = 'sports.txt';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    alert('Sports exported to your download folder!');
+}
+
+</script>
+
+
 </html>
 
