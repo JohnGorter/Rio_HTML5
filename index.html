@@ -1,15 +1,85 @@
+<!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Denk+One" rel="stylesheet">
 </head>
+<style>
+    @font-face {
+        font-family:'john';
+        src:url('john.ttf');
+    }
+    :root {
+        --main-color:red;
+    }
+    body { margin:0px; font-family:Denk one, john, tahoma; color:var(--main-color);}
+    header { text-shadow:5px 5px 3px black;display:flex;align-items:center;padding:20px;background:linear-gradient(var(--main-color), white);font-size:32px;color:white}
+    img { margin-right:20px;}
+    div { padding:20px; }
+    footer { margin:20px;font-size:10px;border-top:1px solid var(--main-color);}
+    
+    input:valid + span  { color:green;font-size:16px;}
+    input:invalid + span { color:red;font-size:10px;}
+</style>
 <body>
-    <div><h1>Rio Olympics</h1></div>
+    <header><img src="2016_1.png" height="50"/>Rio Olympics</header>
 
     <div>
         <h2>Add a new sport</h2>
-        <form>
+        <form method="post" action="/">
             <dl>
-                <dt>Sport</dt>
-                <dd><input type="text" id="sport" name="sport"/></dd>
+                <dt>color:</dt>
+                <dd><select name="color" id="color" onchange="setColor()">
+                    <option value="red">rood</option>
+                    <option value="green">groen</option>
+                    <option value="blue">blauw</option>
+                </select>
+
+                </dd>
+                <dt>Choose a sport from this list:</dt>
+                <dd><input list="sports" name="sport" id="sport" required />
+                    <datalist id="sports">
+                    <option value="Archery">
+                    <option value="Artistic Gymnastics">
+                    <option value="Athletics">
+                    <option value="Badminton">
+                    <option value="Basketball">
+                    <option value="Beach Volleyball">
+                    <option value="Boxing">
+                    <option value="Canoe Slalom">
+                    <option value="Canoe Sprint">
+                    <option value="Cycling BMX">
+                    <option value="Cycling Mountain Bike">
+                    <option value="Cycling Road">
+                    <option value="Cycling Track">
+                    <option value="Diving">
+                    <option value="Equestrian">
+                    <option value="Fencing">
+                    <option value="Football">
+                    <option value="Golf">
+                    <option value="Handball">
+                    <option value="Hockey">
+                    <option value="Judo">
+                    <option value="Marathon Swimming">
+                    <option value="Modern Pentathlon">
+                    <option value="Rhythmic Gymnastics">
+                    <option value="Rowing">
+                    <option value="Rugby Sevens">
+                    <option value="Sailing">
+                    <option value="Shooting">
+                    <option value="Swimming">
+                    <option value="Synchronised Swimming">
+                    <option value="Table Tennis">
+                    <option value="Taekwondo">
+                    <option value="Tennis">
+                    <option value="Trampoline Gymnastics">
+                    <option value="Triathlon">
+                    <option value="Volleyball">
+                    <option value="Water Polo">
+                    <option value="Weightlifting">
+                    <option value="Wrestling">
+                    </datalist>
+                </dd>
             </dl>
             <input type="button" value="save" onclick="saveSport();" />
         </form>
@@ -20,14 +90,29 @@
         <ul id="sportslist">
             <!-- sports list items -->
         </ul>
+        
     </div>
+
+    <footer>Info Support (c) All Rights Reserved</footer>
 
 </body>
 <script>
   function saveSport(){
-      var list = document.querySelector("#sportslist");
-      var name = document.querySelector("#sport").value;
-      list.innerHTML += "<li>" + name + "</li>";
+      if (document.forms[0].checkValidity()){
+        var list = document.querySelector("#sportslist");
+        var name = document.querySelector("#sport").value;
+        if (list.innerText.indexOf(name) < 0){
+            list.innerHTML += "<li>" + name + "</li>";
+            document.querySelector("#sport").value = '';
+           
+        }
+      }
+  }
+
+  function setColor(){
+      var body = document.querySelector("body");
+      var color = document.querySelector("#color").value;
+      body.style.setProperty('--main-color', color);
   }
 </script>
 </html>
